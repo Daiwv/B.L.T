@@ -1,0 +1,120 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys, os, time, json, datetime
+
+
+from time import sleep
+
+from app.engine.Bittrex import Bittrex
+from app.engine.Logger import Logger
+from app.confs.Conf import App
+
+
+# =====================================================================
+class BLT( object ):
+
+    # -------------------------------------------------------------
+    def __init__(self, params):
+
+        LOG.I( ('-'*68) );
+        LOG.I( 'BTL:__init__:' );
+
+        # -----
+        self.params                             = params
+
+        self.ticks                              = {};
+
+
+        # -----
+
+        if( self.INIT() ):
+            self.LOOP();
+
+    # -------------------------------------------------------------
+    def INIT( self ):
+
+        return True;
+
+
+    # -------------------------------------------------------------
+        
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    def LOOP( self ):
+
+        prev_lines = 0;
+
+        while True:
+
+            got_lines = 0;
+
+            try:
+
+                # get all ticks fro all markets
+                for market in App['btx']['markets']:
+                    self.ticks[ market ] = self.tick( market );
+                    print( market, self.ticks[ market ] );
+
+
+                # print( self.ticks );
+
+                sleep( 2 );
+
+            except KeyboardInterrupt as interrupt_err:
+                self.shutdown();
+
+            except Exception as main_err:
+
+
+                LOG.E( main_err );
+                sleep( 1 );
+
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    def tick( self, market='USDT-BTC' ):
+
+        data = { 'ask' :0, 'bid':0 };
+
+        tick_t = BTX.get_ticker( 'USDT-ETH' ); 
+
+        if( tick_t['success'] ):
+            tick_t = tick_t['result'];
+
+            data['ask'] = tick_t['Ask']
+            data['bid'] = tick_t['Bid']
+
+        return data;
+
+    # -------------------------------------------------------------
+    # -------------------------------------------------------------
+    # -------------------------------------------------------------
+    # -------------------------------------------------------------
+    # -------------------------------------------------------------
+    # -------------------------------------------------------------
+
+
+
+
+
+    # -------------------------------------------------------------
+    def CLR( self, lines=1 ):
+
+        num = 0;
+
+        while num < lines:
+            print( '\x1b[1A'+'\x1b[2K'+'\x1b[1A' );
+            num += 1;
+
+    # -------------------------------------------------------------
+    def shutdown( self ):
+        
+        LOG.I( 'Shutdown app: [by user]' );
+        exit(0);
+
+# =====================================================================
+if __name__ == '__main__':
+
+    LOG = Logger( App['log']['path'] ); 
+    BTX = Bittrex( App['btx']['key'], App['btx']['secret'] );
+
+    BLT = BLT( sys.argv[1:] );
+
